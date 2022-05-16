@@ -25,7 +25,6 @@ namespace poc_circuit_breaker.Utils
         public static void Set(string key, string message)
         {            
             var ttl = TimeSpan.FromMinutes(2);
-
             Connection.GetDatabase().StringSet(key, message, ttl);
         }
     }

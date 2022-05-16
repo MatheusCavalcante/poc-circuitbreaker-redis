@@ -8,35 +8,24 @@ var circuitBreaker = new CircuitBreaker(3, 5000);
 
 while (true)
 {
+    Console.WriteLine("Type your name: ");
+    var name = Console.ReadLine();
+
+    Console.WriteLine("Type your age: ");
+    var age = Console.ReadLine();
+
     try
     {
-        Console.WriteLine("Informe o valor do parâmetro: ");
-        var value = Console.ReadLine();
-
-        if (value != null)
+        circuitBreaker.Execute(() =>
         {
-            circuitBreaker.Execute(() =>
-            {                                                
-                var id = new Random().Next(1, 10000);
+            var key = Guid.NewGuid().ToString();
+            var parameters = new { Id = key, Name = name, Age = age };
 
-                var key = $"test_key_{id}";
+            var person = JsonSerializer.Serialize(parameters);
 
-                var param = new { Id = id, Description = "Dias de vencimento", Value = value };
+            RedisConnectionHelper.Set(key, person);
 
-                string paramSerialized = JsonSerializer.Serialize(param);
-
-
-                RedisConnectionHelper.Set(key, paramSerialized);
-
-            });
-        }
-        else
-        {
-            Console.WriteLine("Circuito Fechado");
-            var num = Console.ReadLine();
-
-            Console.WriteLine($"O parâmetro tem o valor: {num}");
-        }
+        });
 
     }
     catch (CircuitBreakerOperationException ex)
@@ -45,6 +34,6 @@ while (true)
     }
     catch (OpenCircuitException ex)
     {
-        Console.WriteLine(circuitBreaker.IsOpen);
+        Console.WriteLine("Resource unavailable, a contingency method will be used.");
     }
 }

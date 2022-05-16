@@ -11,7 +11,7 @@ namespace poc_circuit_breaker
     {
         public event EventHandler StateChanged;
         private object monitor = new object();
-        private DateTime circuitClosedDateTime;
+        private DateTime? circuitClosedDateTime;
         public int Timeout { get; private set; }
         public int Threshold { get; private set; }
         public CircuitBreakerState State { get; private set; }
@@ -24,9 +24,9 @@ namespace poc_circuit_breaker
         public CircuitBreaker(int threshold = 5, int timeout = 10000)
         {
             if (threshold <= 0)
-                throw new ArgumentOutOfRangeException($"{threshold} deve ser maior que zero");
+                throw new ArgumentOutOfRangeException($"{threshold} must be greater than zero");
             if (timeout <= 0)
-                throw new ArgumentOutOfRangeException($"{timeout} deve ser maior que zero");
+                throw new ArgumentOutOfRangeException($"{timeout} must be greater than zero");
             this.Threshold = threshold;
             this.Timeout = timeout;
             this.State = CircuitBreakerState.Closed;
@@ -37,7 +37,7 @@ namespace poc_circuit_breaker
 
         public void Execute(Action action)
         {
-            if (circuitClosedDateTime.AddMinutes(1) < DateTime.Now)
+            if (circuitClosedDateTime?.AddMinutes(2) < DateTime.Now)
                 this.State = CircuitBreakerState.HalfOpen;
 
             if (this.State == CircuitBreakerState.Open)
@@ -62,7 +62,7 @@ namespace poc_circuit_breaker
                         if (this.Timer.Enabled == false)
                             this.Timer.Enabled = true;
                     }
-                    else if (this.FailureCount >= this.Threshold)
+                    else if (this.FailureCount > this.Threshold)
                     {
                         Trip();
                     }
@@ -82,7 +82,7 @@ namespace poc_circuit_breaker
         {
             if (this.State != CircuitBreakerState.Closed)
             {
-                Trace.WriteLine($"Circuito Closed");
+                Trace.WriteLine($"Circuit Closed");
                 ChangeState(CircuitBreakerState.Closed);
                 this.Timer.Stop();
             }
@@ -92,7 +92,7 @@ namespace poc_circuit_breaker
         {
             if (this.State != CircuitBreakerState.Open)
             {
-                Trace.WriteLine($"Circuito Aberto");
+                Trace.WriteLine($"Circuit Open");
                 ChangeState(CircuitBreakerState.Open);
             }
         }
@@ -102,7 +102,7 @@ namespace poc_circuit_breaker
             {
                 try
                 {
-                    Trace.WriteLine($"Retry, Execução nº {this.FailureCount}");
+                    Trace.WriteLine($"Retry, Execution nº {this.FailureCount}");
                     Execute(this.Action);
                     Reset();
                 }
