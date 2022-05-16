@@ -19,7 +19,7 @@ while (true)
             {                                                
                 var id = new Random().Next(1, 10000);
 
-                var key = $"teste_{id}";
+                var key = $"test_key_{id}";
 
                 var param = new { Id = id, Description = "Dias de vencimento", Value = value };
 
@@ -45,6 +45,6 @@ while (true)
     }
     catch (OpenCircuitException ex)
     {
-        Console.WriteLine(cb.IsOpen);
+        Console.WriteLine(circuitBreaker.IsOpen);
     }
 }
